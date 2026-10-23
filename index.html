@@ -263,8 +263,8 @@ details summary{cursor:pointer;color:var(--ink2);font-size:13.5px;font-weight:60
 <!-- ───────── 5 COMPARE ───────── -->
 <section class="tab" id="tab-compare">
 <div class="panel">
-  <h2>Best firm for your stats</h2>
-  <p style="color:var(--ink2);margin:0;font-size:14px">Every plan and size, your trading, same seed. Click a column to sort. Click a row to load it on tabs 2 and 3.</p>
+  <h2>Best firm for your stats, ranked best to worst</h2>
+  <p style="color:var(--ink2);margin:0;font-size:14px">Every plan at the size you picked, your strategy, same seed. #1 is the best expected value per dollar of fee. Click a column to re-sort, click a row to load it.</p>
   <div class="filters">
     <select id="cmpSize"><option value="">All sizes</option></select>
     <select id="cmpFirm"><option value="">All firms</option></select>
@@ -272,7 +272,7 @@ details summary{cursor:pointer;color:var(--ink2);font-size:13.5px;font-weight:60
     <button class="btn btn-s" id="cmpRun" type="button" style="padding:9px 16px;font-size:13px">Re-run comparison</button>
   </div>
   <div class="tw"><table id="cmpTable"><thead><tr>
-    <th data-k="name">Plan</th><th data-k="fee">Fee</th><th data-k="q">Pass</th><th data-k="days">Days</th><th data-k="costF">Cost to funded</th><th data-k="paid">Paid before blown</th><th data-k="cash">First cash</th><th data-k="ev">EV / attempt</th><th data-k="evPer">EV per $ fee</th><th data-k="c90">90-day cash</th><th data-k="src">Rules</th>
+    <th>#</th><th data-k="name">Plan</th><th data-k="fee">Fee</th><th data-k="q">Pass</th><th data-k="days">Days</th><th data-k="costF">Cost to funded</th><th data-k="paid">Paid before blown</th><th data-k="cash">First cash</th><th data-k="ev">EV / attempt</th><th data-k="evPer">EV per $ fee</th><th data-k="c90">90-day cash</th><th data-k="src">Rules</th>
   </tr></thead><tbody id="cmpBody"></tbody></table></div>
   <div class="cap" id="cmpNote"></div>
 </div>
@@ -568,19 +568,20 @@ function budgetTable(T,D,need,budget,mode){const tb=$('budgetTab');tb.innerHTML=
 /* ───────────── compare tab ───────────── */
 let cmpRows=[],cmpSort={k:'evPer',dir:-1};
 let cmpJob=0;
-function runCompare(){const T=lastT||trader();cmpRows=[];const maxFee=+$('cmpMaxFee').value||0,fS=$('cmpSize').value,fF=$('cmpFirm').value;const job=++cmpJob;
+let cmpSizeTouched=false;
+function runCompare(){const T=lastT||trader();cmpRows=[];if(!cmpSizeTouched&&cur)$('cmpSize').value=String(cur.size);const maxFee=+$('cmpMaxFee').value||0,fS=$('cmpSize').value,fF=$('cmpFirm').value;const job=++cmpJob;
  const list=FIRMS.map(r0=>({...r0,fee:feeOf(r0)})).filter(r=>r.fee>0&&!(fS&&r.size!=fS)&&!(fF&&r.firm!==fF)&&!(maxFee>0&&r.fee>maxFee));
  let i=0;$('cmpNote').textContent='Running '+list.length+' plans…';
  const step=()=>{if(job!==cmpJob)return;const end=Math.min(list.length,i+12);
   for(;i<end;i++){const r=list[i];reseed(2024);const e=simEval(T,r,800);const F=fundedFrom(r);reseed(2025);const f=simFunded(T,r,F,500,Math.max(F.fdays,90));const c=costModel(r,e);const ev=e.q*f.paid*f.firstCash-c.first;
    cmpRows.push({r,name:r.firm+' · '+r.plan+' · $'+r.size/1000+'K',fee:r.fee,q:e.q,days:e.instant?0:(e.pdays||T.days),costF:c.toFunded,paid:f.paid,cash:f.firstCash,ev,evPer:ev/Math.max(1,c.first),c90:f.cash.med,src:r.confidence});}
-  renderCompare();if(i<list.length){$('cmpNote').textContent='Running… '+i+' of '+list.length+' plans';setTimeout(step,0);}else $('cmpNote').textContent=cmpRows.length+' plans compared with your stats, same seed. EV per $ fee is the cleanest ranking: it rewards cheap evals that actually pay. Click a row to load it.';};
+  renderCompare();if(i<list.length){$('cmpNote').textContent='Running… '+i+' of '+list.length+' plans';setTimeout(step,0);}else $('cmpNote').textContent=cmpRows.length+' plans ranked for '+(STRATS[strat]?STRATS[strat].name:'your custom strategy')+(fS?' at $'+fS/1000+'K':' across all sizes')+'. EV per $ fee rewards cheap evals that actually pay. Click a row to load it.';};
  step();}
 function renderCompare(){const tb=$('cmpBody');tb.innerHTML='';const rows=[...cmpRows].sort((a,b)=>(a[cmpSort.k]>b[cmpSort.k]?1:-1)*cmpSort.dir*(typeof a[cmpSort.k]==='string'?-1:1));
- rows.forEach((x,i)=>{const tr=document.createElement('tr');if(i===0&&cmpSort.k==='evPer')tr.className='best';tr.style.cursor='pointer';tr.innerHTML=`<td>${x.name}</td><td>${usd(x.fee)}${x.r.feeType==='monthly'?'/mo':''}${x.r.feeEff<x.r.fee&&priceMode==='eff'?' <span class="cap" style="display:inline">code</span>':''}</td><td>${pct1(x.q)}</td><td>${x.days}</td><td>${usd(x.costF)}</td><td>${pct1(x.paid)}</td><td>${usd(x.cash)}</td><td style="color:${x.ev>=0?'var(--mint)':'var(--red)'}">${usd(x.ev)}</td><td style="color:${x.evPer>=0?'var(--mint)':'var(--red)'}">${x.evPer.toFixed(2)}</td><td>${usd(x.c90)}</td><td>${tagOf(x.src)}</td>`;
+ rows.forEach((x,i)=>{const tr=document.createElement('tr');if(i===0&&cmpSort.k==='evPer')tr.className='best';tr.style.cursor='pointer';tr.innerHTML=`<td>${i+1}</td><td>${x.name}</td><td>${usd(x.fee)}${x.r.feeType==='monthly'?'/mo':''}${x.r.feeEff<x.r.fee&&priceMode==='eff'?' <span class="cap" style="display:inline">code</span>':''}</td><td>${pct1(x.q)}</td><td>${x.days}</td><td>${usd(x.costF)}</td><td>${pct1(x.paid)}</td><td>${usd(x.cash)}</td><td style="color:${x.ev>=0?'var(--mint)':'var(--red)'}">${usd(x.ev)}</td><td style="color:${x.evPer>=0?'var(--mint)':'var(--red)'}">${x.evPer.toFixed(2)}</td><td>${usd(x.c90)}</td><td>${tagOf(x.src)}</td>`;
   tr.addEventListener('click',()=>{firmSel.value=x.r.firm;fillPlans();planSel.value=x.r.plan;fillSizes();sizeSel.value=x.r.size;pick();runAll();showTab('eval');});tb.appendChild(tr);});}
 document.querySelectorAll('#cmpTable th').forEach(th=>th.addEventListener('click',()=>{const k=th.dataset.k;if(cmpSort.k===k)cmpSort.dir*=-1;else cmpSort={k,dir:(k==='fee'||k==='costF'||k==='days'||k==='name')?1:-1};renderCompare();}));
-$('cmpRun').addEventListener('click',runCompare);['cmpSize','cmpFirm','cmpMaxFee'].forEach(k=>$(k).addEventListener('change',runCompare));
+$('cmpRun').addEventListener('click',runCompare);['cmpSize','cmpFirm','cmpMaxFee'].forEach(k=>$(k).addEventListener('change',runCompare));$('cmpSize').addEventListener('change',()=>{cmpSizeTouched=true;});
 [...new Set(FIRMS.map(f=>f.size))].sort((a,b)=>a-b).forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent='$'+s/1000+'K';$('cmpSize').appendChild(o);});
 firms.forEach(f=>{const o=document.createElement('option');o.value=f;o.textContent=f;$('cmpFirm').appendChild(o);});
 /* ───────────── live tab ───────────── */
