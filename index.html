@@ -480,7 +480,7 @@ const firms=[...new Set(FIRMS.map(f=>f.firm))];
 firms.forEach(f=>{const o=document.createElement('option');o.value=f;o.textContent=f;firmSel.appendChild(o);});
 function fillPlans(){planSel.innerHTML='';[...new Set(FIRMS.filter(f=>f.firm===firmSel.value).map(f=>f.plan))].forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;planSel.appendChild(o);});}
 function fillSizes(){sizeSel.innerHTML='';const rows=FIRMS.filter(f=>f.firm===firmSel.value&&f.plan===planSel.value).sort((a,b)=>a.size-b.size);rows.forEach(r=>{const o=document.createElement('option');o.value=r.size;o.textContent='$'+(r.size/1000)+'K';sizeSel.appendChild(o);});if(rows.find(r=>r.size===50000))sizeSel.value=50000;}
-function pick(){cur=FIRMS.find(f=>f.firm===firmSel.value&&f.plan===planSel.value&&f.size==sizeSel.value)||FIRMS[0];loadRules();syncMirror();}
+function pick(){cur=FIRMS.find(f=>f.firm===firmSel.value&&f.plan===planSel.value&&f.size==sizeSel.value)||FIRMS[0];loadRules();syncMirror();riskTouched=false;setBestRisk();}
 function loadRules(){const r=cur;
  $('target').value=r.target;$('dd').value=r.dd;$('ddType').value=r.ddType;$('lock').value=(r.lock===null||r.lock===undefined)?'':r.lock;$('dll').value=r.dll||0;$('dllType').value=r.dllType||'soft';$('cons').value=r.consEval||0;$('mind').value=r.minDays||0;$('tlim').value=r.timeLimitDays||0;$('fee').value=feeOf(r);$('feeType').value=r.feeType||'monthly';$('resetFee').value=r.resetFee||0;$('actFee').value=r.activationFee||0;$('maxMicros').value=r.maxMicros||0;
  $('fgoal').value=defaultGoal(r);$('fwf').value=r.wf||100;$('fshare').value=r.share||90;$('ftier').value=r.firstTier||0;$('fwd').value=r.winDays||0;$('fmin').value=r.winDayMin||0;$('fbuf').value=r.buffer||0;$('fconsIn').value=r.consFunded||0;$('ffreq').value=r.payoutFreq||1;$('fcap2').value=r.payoutCapLater||0;$('fmaxp').value=r.maxPayouts||0;$('flock').value=(r.flock===null||r.flock===undefined)?'':r.flock;$('fbufOnce').value=r.bufferOnce?'1':'0';$('fpmin').value=r.payoutMin||0;$('fcap1').value=r.payoutCap||0;$('fddIn').value=r.ddFunded||r.dd;$('fddType').value=r.ddTypeFunded||r.ddType;
@@ -512,7 +512,11 @@ function runYou(){const T=trader();
  if(T.model==='list'){const w=T.list.filter(x=>x>0),l=T.list.filter(x=>x<0),z=T.list.filter(x=>x===0);$('listInfo').innerHTML=T.list.length?`<b>${T.list.length} trades</b> · ${w.length} wins (${pct(T.wr)}), ${l.length} losses, ${z.length} breakeven · avg win +${T.avgW.toFixed(2)}R · avg loss −${T.avgL.toFixed(2)}R · <b>${(T.meanR>=0?'+':'')+T.meanR.toFixed(2)}R per trade</b>`:'Paste trades to see their stats.';}
  return T;}
 /* ───────────── eval tab ───────────── */
-let lastE=null,lastF=null,lastT=null;
+let lastE=null,lastF=null,lastT=null,riskTouched=false;
+function bestRisk(){const T0=trader();const R=readRules();let best=null;
+ for(let risk=100;risk<=1500;risk+=50){const T={...T0,risk};reseed(555);const e=simEval(T,R,900);const F=fundedFrom(cur);reseed(556);const f=simFunded(T,R,F,500,Math.max(F.fdays,1));const c=costModel(R,e);const ev=e.q*f.paid*f.firstCash-c.first;if(!best||ev>best.ev)best={risk,ev};}
+ return best?best.risk:T0.risk;}
+function setBestRisk(){if(!STRATS[strat]||riskTouched)return;const r=bestRisk();$('risk').value=r;$('stratInfo').innerHTML='<b>'+STRATS[strat].name+':</b> '+STRATS[strat].note.replace(/\$\d+ per trade/,'$'+r+' per trade')+'. Risk per trade is set to the best size for this plan ('+usd(r)+' by EV); change it if you like, the rest is locked.';}
 function runEval(){const T=runYou();lastT=T;const R=readRules();reseed(1234567);const e=simEval(T,R,4000);lastE=e;
  $('q').innerHTML=pct1(e.q)+'<small>pass rate</small>';$('qbar').style.width=(e.q*100)+'%';
  $('p3').textContent=pct1(1-Math.pow(1-e.q,3));const att=e.q>0?1/e.q:Infinity;$('att').textContent=isFinite(att)?att.toFixed(1):'∞';
@@ -607,7 +611,8 @@ function applyStrat(){const preset=STRATS[strat];const lock=!!preset;
  if(preset){$('segModel').querySelector('[data-v="own"]').click();$('wr').value=preset.wr;$('rr').value=preset.rr;$('risk').value=preset.risk;$('costs').value=preset.costs;$('tpd').value=preset.tpd;$('stratInfo').style.display='';$('stratInfo').innerHTML='<b>'+preset.name+':</b> '+preset.note+'. Risk per trade is yours to change; the rest is locked. Custom strategy unlocks everything.';}
  else{$('stratInfo').style.display='none';}
  ['wr','rr','costs','tpd'].forEach(k=>$(k).disabled=lock);$('risk').disabled=false;$('segModel').style.display=lock?'none':'';}
-$('segStrat').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{$('segStrat').querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');strat=b.dataset.v;applyStrat();runAll();}));
+$('segStrat').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{$('segStrat').querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');strat=b.dataset.v;riskTouched=false;applyStrat();setBestRisk();runAll();}));
+$('risk').addEventListener('input',()=>{riskTouched=true;});
 $('segModel').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{$('segModel').querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');$('segModel').dataset.v=b.dataset.v;$('ownBox').style.display=b.dataset.v==='own'?'':'none';$('listBox').style.display=b.dataset.v==='list'?'':'none';runAll();}));
 const STATE_IDS=['wr','rr','risk','costs','tpd','empty','days','lossMfe','firm','plan','size','fstyle','fpmin','fcap1','fgoal','fwf','fshare','ftier','fwd','fmin','fbuf','fconsIn','fddIn','fddType','fbufOnce','ffreq','fcap2','fmaxp','flock','fdays','cn','cf','cmode','cneed','cby','cbudget','lstart','lpct','lcap','ldays'];
 let stateHash='';
@@ -622,7 +627,7 @@ $('copyTxt').addEventListener('click',()=>{const T=lastT||trader();const R=readR
  const txt=['**Snoozer Prop Calculator**','Trader: '+(STRATS[strat]?STRATS[strat].name+' · ':'')+(T.model==='list'?T.list.length+' real trades':'WR '+pct(T.wr)+', '+T.rr.toFixed(2)+' ratio')+' · risk '+usd(T.risk)+' · '+T.tpd+'/day · costs '+usd(T.costs),'Account: '+cur.firm+' '+cur.plan+' $'+cur.size/1000+'K ('+usd(R.fee)+(R.feeType==='monthly'?'/mo':'')+')','Pass one attempt: **'+pct1(e.q)+'** · typical '+(e.pdays||'>'+T.days)+' days · expected cost to funded '+usd(C.toFunded),'Paid before blown: **'+pct1(f.paid)+'** · first payout '+usd(f.firstCash)+' in hand · pass AND paid '+pct1(e.q*f.paid),'EV per attempt: **'+usd(ev)+'** · 90-day funded cash typical '+usd(f.cash.med),'',(location.origin.startsWith('http')?location.origin+location.pathname:'')+'#eval&s='+saveState()].join('\n');
  navigator.clipboard.writeText(txt).then(()=>toast('Results copied'));});
 (function(){const d=FIRMS.find(f=>f.firm==='Topstep'&&/Standard Path/.test(f.plan)&&/XFA Standard/.test(f.plan)&&f.size===50000)||FIRMS.find(f=>f.firm==='Topstep'&&f.size===50000)||FIRMS.find(f=>f.size===50000)||FIRMS[0];firmSel.value=d.firm;fillPlans();planSel.value=d.plan;fillSizes();sizeSel.value=d.size;})();pick();renderSources();$('catMeta').textContent=FIRMS.length+' plans across '+firms.length+' firms, catalog built '+(window.CATALOG_GENERATED||'')+'.';
-const had=loadState();applyStrat();const t0=(location.hash.match(/^#([a-z]+)/)||[])[1];showTab(['eval','funded','multi','compare','live','sources'].includes(t0)?t0:'eval');
+const had=loadState();applyStrat();if(!had)setBestRisk();const t0=(location.hash.match(/^#([a-z]+)/)||[])[1];showTab(['eval','funded','multi','compare','live','sources'].includes(t0)?t0:'eval');
 runAll();
 })();
 </script>
