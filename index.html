@@ -264,7 +264,7 @@ details summary{cursor:pointer;color:var(--ink2);font-size:13.5px;font-weight:60
 <section class="tab" id="tab-compare">
 <div class="panel">
   <h2>Best firm for your stats, ranked best to worst</h2>
-  <p style="color:var(--ink2);margin:0;font-size:14px">Every plan at the size you picked, your strategy, same seed. #1 is the best expected value per dollar of fee. Click a column to re-sort, click a row to load it.</p>
+  <p style="color:var(--ink2);margin:0;font-size:14px">Every plan at the size you picked, your strategy, same seed. #1 is the account that makes you the most money per attempt once fees and the funded stage are counted. Click a column to re-sort, click a row to load it.</p>
   <div class="filters">
     <select id="cmpSize"><option value="">All sizes</option></select>
     <select id="cmpFirm"><option value="">All firms</option></select>
@@ -566,7 +566,7 @@ function budgetTable(T,D,need,budget,mode){const tb=$('budgetTab');tb.innerHTML=
  out.sort((a,b)=>b.ev-a.ev);out.slice(0,12).forEach((x,i)=>{const tr=document.createElement('tr');if(i===0)tr.className='best';tr.innerHTML=`<td>${x.name}</td><td>${x.k}</td><td>${usd(x.cost)}</td><td style="color:${x.ev>=0?'var(--mint)':'var(--red)'}">${usd(x.ev)}</td><td>${pct1(x.p)}</td>`;tb.appendChild(tr);});}
 ['cn','cf','cmode','cneed','cby','cbudget'].forEach(k=>$(k).addEventListener('input',runMulti));
 /* ───────────── compare tab ───────────── */
-let cmpRows=[],cmpSort={k:'evPer',dir:-1};
+let cmpRows=[],cmpSort={k:'ev',dir:-1};
 let cmpJob=0;
 let cmpSizeTouched=false;
 function runCompare(){const T=lastT||trader();cmpRows=[];if(!cmpSizeTouched&&cur)$('cmpSize').value=String(cur.size);const maxFee=+$('cmpMaxFee').value||0,fS=$('cmpSize').value,fF=$('cmpFirm').value;const job=++cmpJob;
@@ -575,10 +575,10 @@ function runCompare(){const T=lastT||trader();cmpRows=[];if(!cmpSizeTouched&&cur
  const step=()=>{if(job!==cmpJob)return;const end=Math.min(list.length,i+12);
   for(;i<end;i++){const r=list[i];reseed(2024);const e=simEval(T,r,800);const F=fundedFrom(r);reseed(2025);const f=simFunded(T,r,F,500,Math.max(F.fdays,90));const c=costModel(r,e);const ev=e.q*f.paid*f.firstCash-c.first;
    cmpRows.push({r,name:r.firm+' · '+r.plan+' · $'+r.size/1000+'K',fee:r.fee,q:e.q,days:e.instant?0:(e.pdays||T.days),costF:c.toFunded,paid:f.paid,cash:f.firstCash,ev,evPer:ev/Math.max(1,c.first),c90:f.cash.med,src:r.confidence});}
-  renderCompare();if(i<list.length){$('cmpNote').textContent='Running… '+i+' of '+list.length+' plans';setTimeout(step,0);}else $('cmpNote').textContent=cmpRows.length+' plans ranked for '+(STRATS[strat]?STRATS[strat].name:'your custom strategy')+(fS?' at $'+fS/1000+'K':' across all sizes')+'. EV per $ fee rewards cheap evals that actually pay. Click a row to load it.';};
+  renderCompare();if(i<list.length){$('cmpNote').textContent='Running… '+i+' of '+list.length+' plans';setTimeout(step,0);}else $('cmpNote').textContent=cmpRows.length+' plans ranked for '+(STRATS[strat]?STRATS[strat].name:'your custom strategy')+(fS?' at $'+fS/1000+'K':' across all sizes')+', best to worst by EV per attempt. Click a row to load it.';};
  step();}
 function renderCompare(){const tb=$('cmpBody');tb.innerHTML='';const rows=[...cmpRows].sort((a,b)=>(a[cmpSort.k]>b[cmpSort.k]?1:-1)*cmpSort.dir*(typeof a[cmpSort.k]==='string'?-1:1));
- rows.forEach((x,i)=>{const tr=document.createElement('tr');if(i===0&&cmpSort.k==='evPer')tr.className='best';tr.style.cursor='pointer';tr.innerHTML=`<td>${i+1}</td><td>${x.name}</td><td>${usd(x.fee)}${x.r.feeType==='monthly'?'/mo':''}${x.r.feeEff<x.r.fee&&priceMode==='eff'?' <span class="cap" style="display:inline">code</span>':''}</td><td>${pct1(x.q)}</td><td>${x.days}</td><td>${usd(x.costF)}</td><td>${pct1(x.paid)}</td><td>${usd(x.cash)}</td><td style="color:${x.ev>=0?'var(--mint)':'var(--red)'}">${usd(x.ev)}</td><td style="color:${x.evPer>=0?'var(--mint)':'var(--red)'}">${x.evPer.toFixed(2)}</td><td>${usd(x.c90)}</td><td>${tagOf(x.src)}</td>`;
+ rows.forEach((x,i)=>{const tr=document.createElement('tr');if(i===0&&cmpSort.k==='ev')tr.className='best';tr.style.cursor='pointer';tr.innerHTML=`<td>${i+1}</td><td>${x.name}</td><td>${usd(x.fee)}${x.r.feeType==='monthly'?'/mo':''}${x.r.feeEff<x.r.fee&&priceMode==='eff'?' <span class="cap" style="display:inline">code</span>':''}</td><td>${pct1(x.q)}</td><td>${x.days}</td><td>${usd(x.costF)}</td><td>${pct1(x.paid)}</td><td>${usd(x.cash)}</td><td style="color:${x.ev>=0?'var(--mint)':'var(--red)'}">${usd(x.ev)}</td><td style="color:${x.evPer>=0?'var(--mint)':'var(--red)'}">${x.evPer.toFixed(2)}</td><td>${usd(x.c90)}</td><td>${tagOf(x.src)}</td>`;
   tr.addEventListener('click',()=>{firmSel.value=x.r.firm;fillPlans();planSel.value=x.r.plan;fillSizes();sizeSel.value=x.r.size;pick();runAll();showTab('eval');});tb.appendChild(tr);});}
 document.querySelectorAll('#cmpTable th').forEach(th=>th.addEventListener('click',()=>{const k=th.dataset.k;if(cmpSort.k===k)cmpSort.dir*=-1;else cmpSort={k,dir:(k==='fee'||k==='costF'||k==='days'||k==='name')?1:-1};renderCompare();}));
 $('cmpRun').addEventListener('click',runCompare);['cmpSize','cmpFirm','cmpMaxFee'].forEach(k=>$(k).addEventListener('change',runCompare));$('cmpSize').addEventListener('change',()=>{cmpSizeTouched=true;});
