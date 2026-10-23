@@ -83,65 +83,13 @@ details summary{cursor:pointer;color:var(--ink2);font-size:13.5px;font-weight:60
 </header>
 
 <nav class="tabs" id="tabs">
-  <a href="#you" data-tab="you">1 · Your trading</a>
-  <a href="#eval" data-tab="eval">2 · Pass the eval</a>
-  <a href="#funded" data-tab="funded">3 · Get paid</a>
-  <a href="#multi" data-tab="multi">4 · How many accounts</a>
-  <a href="#compare" data-tab="compare">5 · Best firm for you</a>
-  <a href="#live" data-tab="live">6 · Live account</a>
-  <a href="#sources" data-tab="sources">7 · Rules & sources</a>
+  <a href="#eval" data-tab="eval">Pass the eval</a>
+  <a href="#funded" data-tab="funded">Get paid</a>
+  <a href="#multi" data-tab="multi">How many accounts</a>
+  <a href="#compare" data-tab="compare">Best firm for you</a>
+  <a href="#live" data-tab="live">Live account</a>
+  <a href="#sources" data-tab="sources">Rules & sources</a>
 </nav>
-
-<!-- ───────── 1 YOUR TRADING ───────── -->
-<section class="tab" id="tab-you">
-<div class="grid">
-  <div class="panel">
-    <h2>Your trading</h2>
-    <div class="seg" id="segModel"><button data-v="own" class="on">Win rate and ratio</button><button data-v="list">My last trades (R list)</button></div>
-    <div id="ownBox">
-      <div class="row"><label for="wr">Win rate (%)<small>From your journal, not your memory</small></label><input type="number" id="wr" value="50" step="1" min="1" max="99"></div>
-      <div class="row"><label for="rr">Avg win ÷ avg loss<small>1.5 means wins are 1.5× your losses</small></label><input type="number" id="rr" value="1.5" step="0.1" min="0.1"></div>
-    </div>
-    <div id="listBox" style="display:none">
-      <label for="rlist" style="font-weight:600;font-size:14.5px">Your last trades in R, one per line or comma separated<small style="display:block;font-weight:400;color:var(--ink3);font-size:12px">+1.5 means you made 1.5× your risk. −1 is a full stop. 0 is breakeven. The sim replays these.</small></label>
-      <textarea id="rlist" placeholder="1.5, -1, 2, -1, 0.5, -1, 3, 0, 1 ..."></textarea>
-      <div class="rules" id="listInfo" style="margin-top:8px">Paste trades to see their stats.</div>
-    </div>
-    <h3>Size and costs</h3>
-    <div class="row"><label for="risk">Risk per trade ($)<small>What a full stop costs you</small></label><input type="number" id="risk" value="300" step="25" min="1"></div>
-    <div class="row"><label for="inst">Instrument<small>Sets the point value for contracts and costs</small></label><select id="inst"></select></div>
-    <div class="row"><label for="stopPts">Stop size (points)<small>0 = skip the contract math</small></label><input type="number" id="stopPts" value="0" step="1" min="0"></div>
-    <div class="row"><label for="rtCost">All-in cost per contract, round trip ($)<small>Commission + exchange fees + slippage</small></label><input type="number" id="rtCost" value="4.5" step="0.5" min="0"></div>
-    <div class="row"><label for="costs">Costs per trade ($)<small id="costHint">Filled from contracts when stop size is set</small></label><input type="number" id="costs" value="10" step="1" min="0"></div>
-    <h3>Rhythm</h3>
-    <div class="row"><label for="tpd">Trades per day</label><input type="number" id="tpd" value="2" step="0.5" min="0.1"></div>
-    <div class="row"><label for="empty">Days you don't trade (%)<small>No setup, no signal, life</small></label><input type="number" id="empty" value="20" step="5" min="0" max="90"></div>
-    <div class="row"><label for="days">Trading days you'll give one attempt<small>Your patience, not the firm's clock</small></label><input type="number" id="days" value="30" step="5" min="1"></div>
-    <div class="rules" id="youInfo"></div>
-    <div class="btn-row"><button class="btn" id="runAll" type="button">Run everything</button><button class="btn btn-s" id="share" type="button">Copy share link</button><button class="btn btn-s" id="copyTxt" type="button">Copy results for Discord</button></div>
-  </div>
-  <div>
-    <div class="res">
-      <div class="k">Your edge per trade</div>
-      <div class="big" id="edgeR">…<small>R per trade</small></div>
-      <div class="stats">
-        <div><b id="edgeUsd">…</b><span>$ per trade after costs</span></div>
-        <div><b id="edgeCI">…</b><span id="edgeCILabel">win rate range your trade list supports (95%)</span></div>
-        <div><b id="edgeBE">…</b><span>breakeven ratio at your win rate</span></div>
-        <div><b id="edgeKelly">…</b><span>full Kelly fraction of account</span></div>
-        <div><b id="edgeStreak">…</b><span>losing streak to expect in 100 trades</span></div>
-        <div><b id="edgeCon">…</b><span id="conLabel">contracts per trade</span></div>
-      </div>
-      <div class="verdict" id="edgeVerdict">Run it.</div>
-    </div>
-    <div class="panel" style="margin-top:16px">
-      <h2>What this does</h2>
-      <p style="color:var(--ink2);font-size:14.5px;margin:0">Every number on every tab comes from simulating your trades one at a time against the firm's rules: trailing drawdown the way that firm trails it, daily limits, consistency, minimum days, payout buffers and caps. No optimizer, no "88% win rate" math. Change a number anywhere and everything re-runs.</p>
-      <div class="cap">Same seed every time, so a shared link shows the same results to everyone.</div>
-    </div>
-  </div>
-</div>
-</section>
 
 <!-- ───────── 2 EVAL ───────── -->
 <section class="tab" id="tab-eval">
@@ -169,8 +117,26 @@ details summary{cursor:pointer;color:var(--ink2);font-size:13.5px;font-weight:60
       <div class="row"><label for="actFee">Activation fee once funded ($)</label><input type="number" id="actFee" step="1"></div>
       <div class="row"><label for="maxMicros">Max micros</label><input type="number" id="maxMicros" step="1"></div>
     </details>
-    <h3>Loser excursion (intraday trailing only)</h3>
-    <div class="row"><label for="lossMfe">Losers go in your favor first by up to (R)<small>Intraday trailing uses unrealized highs, so this matters</small></label><input type="number" id="lossMfe" value="0.4" step="0.1" min="0" max="1"></div>
+    <h2 style="margin-top:22px">Your trading</h2>
+    <div class="seg" id="segModel"><button data-v="own" class="on">Win rate and ratio</button><button data-v="list">My last trades (R list)</button></div>
+    <div id="ownBox">
+      <div class="row"><label for="wr">Win rate (%)<small>From your journal, not your memory</small></label><input type="number" id="wr" value="50" step="1" min="1" max="99"></div>
+      <div class="row"><label for="rr">Avg win ÷ avg loss<small>1.5 means wins are 1.5× your losses</small></label><input type="number" id="rr" value="1.5" step="0.1" min="0.1"></div>
+    </div>
+    <div id="listBox" style="display:none">
+      <label for="rlist" style="font-weight:600;font-size:14.5px">Your last trades in R, one per line or comma separated<small style="display:block;font-weight:400;color:var(--ink3);font-size:12px">+1.5 means you made 1.5× your risk. −1 is a full stop. 0 is breakeven. The sim replays these.</small></label>
+      <textarea id="rlist" placeholder="1.5, -1, 2, -1, 0.5, -1, 3, 0, 1 ..."></textarea>
+      <div class="rules" id="listInfo" style="margin-top:8px">Paste trades to see their stats.</div>
+    </div>
+    <div class="row"><label for="risk">Risk per trade ($)<small>What a full stop costs you</small></label><input type="number" id="risk" value="300" step="25" min="1"></div>
+    <div class="row"><label for="costs">Costs per trade ($)<small>Commissions + slippage, round trip</small></label><input type="number" id="costs" value="10" step="1" min="0"></div>
+    <div class="row"><label for="tpd">Trades per day</label><input type="number" id="tpd" value="2" step="0.5" min="0.1"></div>
+    <div class="row"><label for="empty">Days you don't trade (%)<small>No setup, no signal, life</small></label><input type="number" id="empty" value="20" step="5" min="0" max="90"></div>
+    <div class="row"><label for="days">Trading days you'll give one attempt<small>Your patience, not the firm's clock</small></label><input type="number" id="days" value="30" step="5" min="1"></div>
+    <div class="rules" id="youInfo"></div>
+    <div class="btn-row"><button class="btn" id="runAll" type="button">Run it</button><button class="btn btn-s" id="share" type="button">Copy share link</button><button class="btn btn-s" id="copyTxt" type="button">Copy results for Discord</button></div>
+    <details><summary>Intraday trailing detail</summary>
+    <div class="row"><label for="lossMfe">Losers go in your favor first by up to (R)<small>Intraday trailing uses unrealized highs, so this matters</small></label><input type="number" id="lossMfe" value="0.4" step="0.1" min="0" max="1"></div></details>
   </div>
   <div>
     <div class="res">
@@ -350,8 +316,8 @@ details summary{cursor:pointer;color:var(--ink2);font-size:13.5px;font-weight:60
 <script>
 (function(){
 const $=id=>document.getElementById(id);
-/* ───────────── data: instruments ───────────── */
-const INST=[
+/* ───────────── data: instruments (unused in this layout) ───────────── */
+const INST_UNUSED=[
  {s:'MNQ',n:'Micro Nasdaq',pv:2,tick:0.25,rt:1.2},{s:'NQ',n:'E-mini Nasdaq',pv:20,tick:0.25,rt:4.5},
  {s:'MES',n:'Micro S&P',pv:5,tick:0.25,rt:1.2},{s:'ES',n:'E-mini S&P',pv:50,tick:0.25,rt:4.5},
  {s:'MGC',n:'Micro Gold',pv:10,tick:0.1,rt:1.5},{s:'GC',n:'Gold',pv:100,tick:0.1,rt:5.5},
@@ -385,9 +351,8 @@ function trader(){
  let wr,rr,avgW,avgL,n;
  if(useList){const w=list.filter(x=>x>0),l=list.filter(x=>x<0);avgW=w.length?w.reduce((a,b)=>a+b,0)/w.length:0;avgL=l.length?-l.reduce((a,b)=>a+b,0)/l.length:1;wr=w.length/list.length;rr=avgL>0?avgW/avgL:avgW;n=list.length;}
  else{wr=(+$('wr').value||50)/100;rr=+$('rr').value||1;avgW=rr;avgL=1;n=0;}
- const risk=+$('risk').value||100;const inst=INST.find(i=>i.s===$('inst').value)||INST[0];const stopPts=+$('stopPts').value||0;
+ const risk=+$('risk').value||100;const inst={s:'',pv:0},stopPts=0;
  let contracts=0,costs=+$('costs').value||0;
- if(stopPts>0&&inst.pv>0){contracts=Math.max(1,Math.floor(risk/(stopPts*inst.pv)));costs=contracts*(+$('rtCost').value||0);}
  const tpd=Math.max(0.1,+$('tpd').value||1),empty=Math.min(0.95,Math.max(0,(+$('empty').value||0)/100)),days=Math.max(1,+$('days').value||20);
  const draw=useList?()=>list[Math.floor(rnd()*list.length)]:()=>rnd()<wr?rr:-1;
  const perDay=()=>{if(rnd()<empty)return 0;const f=Math.floor(tpd);return f+(rnd()<tpd-f?1:0);};
@@ -521,24 +486,16 @@ function showRules(){const R=readRules();const r=cur;const inst=R.instant;
 firmSel.addEventListener('change',()=>{fillPlans();fillSizes();pick();runAll();});planSel.addEventListener('change',()=>{fillSizes();pick();runAll();});sizeSel.addEventListener('change',()=>{pick();runAll();});
 ['target','dd','ddType','lock','dll','dllType','cons','mind','tlim','fee','feeType','resetFee','actFee','maxMicros'].forEach(k=>$(k).addEventListener('input',()=>{showRules();runEval();}));
 ['fgoal','fwf','fshare','ftier','fwd','fmin','fbuf','fbufOnce','fdd','fddType','fcons','ffreq','fcap2','fmaxp','flock','fdays'].forEach(k=>$(k).addEventListener('input',()=>{showRules();runEval();}));
-INST.forEach(i=>{const o=document.createElement('option');o.value=i.s;o.textContent=i.s+(i.n?' · '+i.n:'');$('inst').appendChild(o);});
-$('inst').addEventListener('change',()=>{const i=INST.find(x=>x.s===$('inst').value);if(i&&i.rt>0)$('rtCost').value=i.rt;runAll();});
 /* ───────────── you ───────────── */
 function wilson(p,n){if(n<=0)return[0,1];const z=1.96;const d=1+z*z/n;const c=p+z*z/(2*n);const h=z*Math.sqrt(p*(1-p)/n+z*z/(4*n*n));return[(c-h)/d,(c+h)/d];}
 function runYou(){const T=trader();
- const edge=T.meanR;$('edgeR').innerHTML=(edge>=0?'+':'')+edge.toFixed(2)+'<small>R per trade</small>';
- const perTrade=edge*T.risk-T.costs;$('edgeUsd').textContent=usd(perTrade);$('edgeUsd').style.color=perTrade>=0?'var(--mint)':'var(--red)';
- const [lo,hi]=T.n>0?wilson(T.wr,T.n):[T.wr,T.wr];if(T.n>0){$('edgeCI').textContent=pct(lo)+' to '+pct(hi);$('edgeCILabel').textContent='win rate range your '+T.n+' trades support (95%)';}else{$('edgeCI').textContent=pct((1-T.wr)/T.wr>0?1/(1+T.rr):0);$('edgeCILabel').textContent='breakeven win rate at your ratio';}
- const be=1/(1+T.rr);$('edgeBE').textContent=((1-T.wr)/Math.max(T.wr,0.01)).toFixed(2)+' : 1';
- const kelly=T.rr>0?T.wr-(1-T.wr)/T.rr:0;$('edgeKelly').textContent=kelly>0?pct(kelly)+' (use a quarter)':'no edge';
- const streak=T.wr<1?Math.round(Math.log(100)/-Math.log(1-T.wr)):0;$('edgeStreak').textContent=streak+' in a row';
- if(T.contracts>0){$('edgeCon').textContent=T.contracts+' × '+T.inst.s;$('conLabel').textContent='contracts per trade at a '+T.stopPts+'-pt stop';$('costs').value=T.costs;$('costHint').textContent='From '+T.contracts+' contracts × $'+$('rtCost').value+' round trip';}else{$('edgeCon').textContent='n/a';$('conLabel').textContent='set a stop size for contracts';$('costHint').textContent='Commissions + slippage, round trip';}
- const v=$('edgeVerdict');
- if(T.model==='list'&&T.list.length<5){v.className='verdict warn';v.textContent='Paste at least 5 trades, or switch to win rate and ratio.';}
- else if(T.n>0&&lo<be){v.className='verdict warn';v.textContent=`Your win rate could be as low as ${pct(lo)} on ${T.n} trades, which is under the ${pct(be)} breakeven at a ${T.rr.toFixed(2)} ratio. The edge is not proven yet. Every number on the other tabs assumes it is real.`;}
- else if(perTrade<=0){v.className='verdict bad';v.textContent='After costs this loses money per trade. No firm fixes that. Fix the trading or the costs first.';}
- else{v.className='verdict good';v.textContent=`Real edge: about ${usd(perTrade)} per trade after costs. With ${T.tpd} trades a day and ${Math.round(T.empty*100)}% empty days that is roughly ${usd(perTrade*T.tpd*(1-T.empty)*21)} a month per account at this size.`;}
- $('youInfo').innerHTML=`<b>What the sim uses:</b> ${T.model==='list'?T.list.length+' pasted trades, replayed at random':'win rate '+pct(T.wr)+', wins '+T.rr.toFixed(2)+'× losses'} · risk ${usd(T.risk)} · costs ${usd(T.costs)} per trade · ${T.tpd} trades on a trading day, ${Math.round(T.empty*100)}% of days empty · ${T.days} days per attempt.`;
+ const edge=T.meanR,perTrade=edge*T.risk-T.costs,be=1/(1+T.rr),kelly=T.rr>0?T.wr-(1-T.wr)/T.rr:0;
+ const [lo,hi]=T.n>0?wilson(T.wr,T.n):[T.wr,T.wr];
+ let warn='';
+ if(T.model==='list'&&T.list.length<5)warn='Paste at least 5 trades, or switch to win rate and ratio.';
+ else if(T.n>0&&lo<be)warn=`Your win rate could be as low as ${pct(lo)} on ${T.n} trades, under the ${pct(be)} breakeven at a ${T.rr.toFixed(2)} ratio. The edge is not proven yet.`;
+ else if(perTrade<=0)warn='After costs this loses money per trade. No firm fixes that.';
+ $('youInfo').innerHTML=`<b>Edge:</b> ${(edge>=0?'+':'')+edge.toFixed(2)}R per trade, <b style="color:${perTrade>=0?'var(--mint)':'var(--red)'}">${usd(perTrade)}</b> after costs · breakeven win rate ${pct(be)} · Kelly ${kelly>0?pct(kelly)+' (use a quarter)':'none'} · ${T.model==='list'?T.list.length+' pasted trades replayed':'win rate '+pct(T.wr)+', wins '+T.rr.toFixed(2)+'× losses'} · ${T.tpd} trades a day, ${Math.round(T.empty*100)}% empty days${warn?'<div class="cap" style="color:#ffd3cf">'+warn+'</div>':''}`;
  if(T.model==='list'){const w=T.list.filter(x=>x>0),l=T.list.filter(x=>x<0),z=T.list.filter(x=>x===0);$('listInfo').innerHTML=T.list.length?`<b>${T.list.length} trades</b> · ${w.length} wins (${pct(T.wr)}), ${l.length} losses, ${z.length} breakeven · avg win +${T.avgW.toFixed(2)}R · avg loss −${T.avgL.toFixed(2)}R · <b>${(T.meanR>=0?'+':'')+T.meanR.toFixed(2)}R per trade</b>`:'Paste trades to see their stats.';}
  return T;}
 /* ───────────── eval tab ───────────── */
@@ -556,7 +513,7 @@ function runEval(){const T=runYou();lastT=T;const R=readRules();reseed(1234567);
  else if(ev>0){v.className='verdict good';v.textContent=`Positive but thin: ${usd(ev)} per attempt. Check the size table before buying more attempts.`;}
  else{v.className='verdict bad';v.textContent=`At these numbers the next attempt is a donation: ${usd(ev)} per attempt. ${e.fDD+e.fDll>e.fTime?'Most failures are the drawdown: oversized for this account.':'Most failures are the clock: too few trades or too little size for this target.'} ${e.consHold>0.15?'Consistency is holding '+pct(e.consHold)+' of runs at the target.':''}`;}
  const tb=$('sens');tb.innerHTML='';const rows=[];
- for(const m of [0.5,0.75,1,1.5,2,3]){const T2={...T,risk:Math.round(T.risk*m),costs:T.contracts>0?Math.max(1,Math.floor(Math.round(T.risk*m)/(T.stopPts*T.inst.pv)))*(+$('rtCost').value||0):T.costs};reseed(777);const s=simEval(T2,R,2000);const f=simFundedQuick(T2,R,1200);const c=costModel(R,s);rows.push({m,T2,s,ev:s.q*f.paid*f.firstCash-c.first});}
+ for(const m of [0.5,0.75,1,1.5,2,3]){const T2={...T,risk:Math.round(T.risk*m)};reseed(777);const s=simEval(T2,R,2000);const f=simFundedQuick(T2,R,1200);const c=costModel(R,s);rows.push({m,T2,s,ev:s.q*f.paid*f.firstCash-c.first});}
  const bestEv=Math.max(...rows.map(x=>x.ev));
  for(const x of rows){const tr=document.createElement('tr');if(x.m===1)tr.className='me';tr.innerHTML=`<td>${usd(x.T2.risk)}${x.m===1?' (you)':''}</td><td>${pct1(x.s.q)}</td><td>${pct1(x.s.fDD+x.s.fDll)}</td><td>${pct1(x.s.fTime)}</td><td>${x.s.pdays||'—'}</td><td style="${x.ev===bestEv?'color:var(--mint);font-weight:700':''}">${usd(x.ev)}${x.ev===bestEv?' ★':''}</td>`;tb.appendChild(tr);}
  const bigDay=T.risk*T.rr*Math.max(1,Math.round(T.tpd))-T.costs;
@@ -633,20 +590,20 @@ function showTab(t){document.querySelectorAll('section.tab').forEach(s=>s.classL
 document.querySelectorAll('nav.tabs a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();showTab(a.dataset.tab);}));
 $('segPrice').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{$('segPrice').querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');priceMode=b.dataset.v;loadRules();runAll();}));
 $('segModel').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{$('segModel').querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');$('segModel').dataset.v=b.dataset.v;$('ownBox').style.display=b.dataset.v==='own'?'':'none';$('listBox').style.display=b.dataset.v==='list'?'':'none';runAll();}));
-const STATE_IDS=['wr','rr','risk','inst','stopPts','rtCost','costs','tpd','empty','days','lossMfe','firm','plan','size','fgoal','fwf','fshare','ftier','fwd','fmin','fbuf','fcons','ffreq','fcap2','fmaxp','flock','fdays','cn','cf','cmode','cneed','cby','cbudget','lstart','lmode','lpct','lfix','lcap','ldays'];
+const STATE_IDS=['wr','rr','risk','costs','tpd','empty','days','lossMfe','firm','plan','size','fgoal','fwf','fshare','ftier','fwd','fmin','fbuf','fcons','ffreq','fcap2','fmaxp','flock','fdays','cn','cf','cmode','cneed','cby','cbudget','lstart','lmode','lpct','lfix','lcap','ldays'];
 let stateHash='';
 function saveState(){const o={m:$('segModel').dataset.v||'own',l:$('rlist').value};STATE_IDS.forEach(id=>o[id]=$(id).value);stateHash=btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/=+$/,'');return stateHash;}
 function loadState(){const m=location.hash.match(/s=([A-Za-z0-9+/]+)/);if(!m)return false;try{const o=JSON.parse(decodeURIComponent(escape(atob(m[1]))));if(o.firm){firmSel.value=o.firm;fillPlans();planSel.value=o.plan;fillSizes();sizeSel.value=o.size;pick();}STATE_IDS.forEach(id=>{if(o[id]!==undefined&&!['firm','plan','size'].includes(id))$(id).value=o[id];});if(o.m==='list'){$('segModel').querySelector('[data-v="list"]').click();$('rlist').value=o.l||'';}return true;}catch(e){return false;}}
-$('share').addEventListener('click',()=>{saveState();const t=(document.querySelector('nav.tabs a.on')||{}).dataset||{};const url=location.origin+location.pathname+'#'+(t.tab||'you')+'&s='+stateHash;navigator.clipboard.writeText(url).then(()=>toast('Link copied'));});
+$('share').addEventListener('click',()=>{saveState();const t=(document.querySelector('nav.tabs a.on')||{}).dataset||{};const url=location.origin+location.pathname+'#'+(t.tab||'eval')+'&s='+stateHash;navigator.clipboard.writeText(url).then(()=>toast('Link copied'));});
 function toast(s){const t=$('toast');t.textContent=s;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1600);}
-['wr','rr','risk','stopPts','rtCost','costs','tpd','empty','days','lossMfe'].forEach(k=>$(k).addEventListener('input',runAll));$('rlist').addEventListener('input',runAll);
+['wr','rr','risk','costs','tpd','empty','days','lossMfe'].forEach(k=>$(k).addEventListener('input',runAll));$('rlist').addEventListener('input',runAll);
 let busy=false;function runAll(){if(busy)return;busy=true;try{runEval();runLive();cmpRows=[];if(document.querySelector('#tab-compare.on'))runCompare();saveState();}finally{busy=false;}}
 $('runAll').addEventListener('click',runAll);
 $('copyTxt').addEventListener('click',()=>{const T=lastT||trader();const R=readRules();const e=lastE,f=lastF;if(!e||!f){toast('Run it first');return;}const C=costModel(R,e);const ev=e.q*f.paid*f.firstCash-C.first;
  const txt=['**Snoozer Prop Calculator**','Trader: '+(T.model==='list'?T.list.length+' real trades':'WR '+pct(T.wr)+', '+T.rr.toFixed(2)+' ratio')+' · risk '+usd(T.risk)+' · '+T.tpd+'/day · costs '+usd(T.costs),'Account: '+cur.firm+' '+cur.plan+' $'+cur.size/1000+'K ('+usd(R.fee)+(R.feeType==='monthly'?'/mo':'')+')','Pass one attempt: **'+pct1(e.q)+'** · typical '+(e.pdays||'>'+T.days)+' days · expected cost to funded '+usd(C.toFunded),'Paid before blown: **'+pct1(f.paid)+'** · first payout '+usd(f.firstCash)+' in hand · pass AND paid '+pct1(e.q*f.paid),'EV per attempt: **'+usd(ev)+'** · 90-day funded cash typical '+usd(f.cash.med),'',(location.origin.startsWith('http')?location.origin+location.pathname:'')+'#eval&s='+saveState()].join('\n');
  navigator.clipboard.writeText(txt).then(()=>toast('Results copied'));});
 (function(){const d=FIRMS.find(f=>/Apex/.test(f.firm)&&/Intraday/.test(f.plan)&&/Standard/.test(f.plan)&&f.size===50000)||FIRMS.find(f=>f.size===50000)||FIRMS[0];firmSel.value=d.firm;fillPlans();planSel.value=d.plan;fillSizes();sizeSel.value=d.size;})();pick();renderSources();$('catMeta').textContent=FIRMS.length+' plans across '+firms.length+' firms, catalog built '+(window.CATALOG_GENERATED||'')+'.';
-const had=loadState();const t0=(location.hash.match(/^#([a-z]+)/)||[])[1];showTab(['you','eval','funded','multi','compare','live','sources'].includes(t0)?t0:'you');
+const had=loadState();const t0=(location.hash.match(/^#([a-z]+)/)||[])[1];showTab(['eval','funded','multi','compare','live','sources'].includes(t0)?t0:'eval');
 runAll();
 })();
 </script>
