@@ -100,6 +100,9 @@ details summary{cursor:pointer;color:var(--ink2);font-size:13.5px;font-weight:60
     <div class="row"><label for="firm">Firm</label><select id="firm"></select></div>
     <div class="row"><label for="plan">Plan</label><select id="plan"></select></div>
     <div class="row"><label for="size">Size</label><select id="size"></select></div>
+    <div class="row"><label>Strategy</label><div></div></div>
+    <div class="seg" id="segStrat" style="margin:-4px 0 10px"><button data-v="signals" class="on">Snoozer Signals</button><button data-v="bot">Snoozer Bot</button><button data-v="custom">Custom strategy</button></div>
+    <div class="rules" id="stratInfo" style="margin:0 0 10px"></div>
     <div class="rules" id="rules"></div>
     <details><summary>Edit the rules by hand</summary>
       <div class="row"><label for="target">Profit target ($)</label><input type="number" id="target" step="100"></div>
@@ -118,8 +121,6 @@ details summary{cursor:pointer;color:var(--ink2);font-size:13.5px;font-weight:60
       <div class="row"><label for="maxMicros">Max micros</label><input type="number" id="maxMicros" step="1"></div>
     </details>
     <h2 style="margin-top:22px">Your trading</h2>
-    <div class="seg" id="segStrat" style="margin-bottom:8px"><button data-v="signals" class="on">Snoozer Signals</button><button data-v="bot">Snoozer Bot</button><button data-v="custom">Custom strategy</button></div>
-    <div class="rules" id="stratInfo" style="margin-top:0;margin-bottom:6px"></div>
     <div class="seg" id="segModel"><button data-v="own" class="on">Win rate and ratio</button><button data-v="list">My last trades (R list)</button></div>
     <div id="ownBox">
       <div class="row"><label for="wr">Win rate (%)<small>From your journal, not your memory</small></label><input type="number" id="wr" value="50" step="1" min="1" max="99"></div>
@@ -620,7 +621,7 @@ $('runAll').addEventListener('click',runAll);
 $('copyTxt').addEventListener('click',()=>{const T=lastT||trader();const R=readRules();const e=lastE,f=lastF;if(!e||!f){toast('Run it first');return;}const C=costModel(R,e);const ev=e.q*f.paid*f.firstCash-C.first;
  const txt=['**Snoozer Prop Calculator**','Trader: '+(STRATS[strat]?STRATS[strat].name+' · ':'')+(T.model==='list'?T.list.length+' real trades':'WR '+pct(T.wr)+', '+T.rr.toFixed(2)+' ratio')+' · risk '+usd(T.risk)+' · '+T.tpd+'/day · costs '+usd(T.costs),'Account: '+cur.firm+' '+cur.plan+' $'+cur.size/1000+'K ('+usd(R.fee)+(R.feeType==='monthly'?'/mo':'')+')','Pass one attempt: **'+pct1(e.q)+'** · typical '+(e.pdays||'>'+T.days)+' days · expected cost to funded '+usd(C.toFunded),'Paid before blown: **'+pct1(f.paid)+'** · first payout '+usd(f.firstCash)+' in hand · pass AND paid '+pct1(e.q*f.paid),'EV per attempt: **'+usd(ev)+'** · 90-day funded cash typical '+usd(f.cash.med),'',(location.origin.startsWith('http')?location.origin+location.pathname:'')+'#eval&s='+saveState()].join('\n');
  navigator.clipboard.writeText(txt).then(()=>toast('Results copied'));});
-(function(){const d=FIRMS.find(f=>/Apex/.test(f.firm)&&/Intraday/.test(f.plan)&&/Standard/.test(f.plan)&&f.size===50000)||FIRMS.find(f=>f.size===50000)||FIRMS[0];firmSel.value=d.firm;fillPlans();planSel.value=d.plan;fillSizes();sizeSel.value=d.size;})();pick();renderSources();$('catMeta').textContent=FIRMS.length+' plans across '+firms.length+' firms, catalog built '+(window.CATALOG_GENERATED||'')+'.';
+(function(){const d=FIRMS.find(f=>f.firm==='Topstep'&&/Standard Path/.test(f.plan)&&/XFA Standard/.test(f.plan)&&f.size===50000)||FIRMS.find(f=>f.firm==='Topstep'&&f.size===50000)||FIRMS.find(f=>f.size===50000)||FIRMS[0];firmSel.value=d.firm;fillPlans();planSel.value=d.plan;fillSizes();sizeSel.value=d.size;})();pick();renderSources();$('catMeta').textContent=FIRMS.length+' plans across '+firms.length+' firms, catalog built '+(window.CATALOG_GENERATED||'')+'.';
 const had=loadState();applyStrat();const t0=(location.hash.match(/^#([a-z]+)/)||[])[1];showTab(['eval','funded','multi','compare','live','sources'].includes(t0)?t0:'eval');
 runAll();
 })();
