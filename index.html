@@ -280,9 +280,8 @@ details summary{cursor:pointer;color:var(--ink2);font-size:13.5px;font-weight:60
     <h2>Live account</h2>
     <p style="color:var(--ink2);margin:0 0 6px;font-size:14px">Your own money, no rules. Costs scale with size.</p>
     <div class="row"><label for="lstart">Starting balance ($)</label><input type="number" id="lstart" value="2500" step="100"></div>
-    <div class="row"><label for="lmode">Sizing</label><select id="lmode"><option value="pct">% of balance per trade</option><option value="fixed">Fixed $ per trade</option></select></div>
     <div class="row"><label for="lpct">Risk per trade (% of balance)</label><input type="number" id="lpct" value="2" step="0.5" min="0.1"></div>
-    <div class="row"><label for="lfix">Risk per trade ($, fixed mode)</label><input type="number" id="lfix" value="100" step="25"></div>
+    <div class="row"><label for="lcap">Most you'd risk on one trade ($)<small>0 = no cap</small></label><input type="number" id="lcap" value="0" step="100"></div>
     <div class="row"><label for="ldays">Days</label><input type="number" id="ldays" value="60" step="5" min="1"></div>
   </div>
   <div>
@@ -465,7 +464,7 @@ function simLive(T,P,N){
  for(let n=0;n<N;n++){
   let bal=P.lstart,dead=false,doubled=false;snaps[0].push(bal);
   for(let day=1;day<=D;day++){
-   if(!dead){const k=T.perDay();for(let t=0;t<k;t++){let risk=P.lmode==='pct'?bal*P.lpct/100:P.lfix;if(risk>bal)risk=bal;const cost=T.risk>0?T.costs*risk/T.risk:0;bal+=T.draw()*risk-cost;if(bal>=2*P.lstart)doubled=true;if(bal<=P.lstart/2){dead=true;ruin++;break;}}}
+   if(!dead){const k=T.perDay();for(let t=0;t<k;t++){let risk=bal*P.lpct/100;if(P.lcap>0&&risk>P.lcap)risk=P.lcap;if(risk>bal)risk=bal;const cost=T.risk>0?T.costs*risk/T.risk:0;bal+=T.draw()*risk-cost;if(bal>=2*P.lstart)doubled=true;if(bal<=P.lstart/2){dead=true;ruin++;break;}}}
    snaps[day].push(bal);
   }
   if(doubled)dbl++;
@@ -583,7 +582,7 @@ $('cmpRun').addEventListener('click',runCompare);$('srcQ').addEventListener('inp
 [...new Set(FIRMS.map(f=>f.size))].sort((a,b)=>a-b).forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent='$'+s/1000+'K';$('cmpSize').appendChild(o);});
 firms.forEach(f=>{const o=document.createElement('option');o.value=f;o.textContent=f;$('cmpFirm').appendChild(o);});
 /* ───────────── live tab ───────────── */
-function runLive(){const T=lastT||trader();const P={lstart:+$('lstart').value||1000,lmode:$('lmode').value,lpct:+$('lpct').value||1,lfix:+$('lfix').value||50,ldays:Math.min(365,Math.max(1,+$('ldays').value||30))};reseed(9001);const r=simLive(T,P,2000);const D=P.ldays,last=r.rows[D];
+function runLive(){const T=lastT||trader();const P={lstart:+$('lstart').value||1000,lpct:+$('lpct').value||1,lcap:+$('lcap').value||0,ldays:Math.min(365,Math.max(1,+$('ldays').value||30))};reseed(9001);const r=simLive(T,P,2000);const D=P.ldays,last=r.rows[D];
  $('ldaysT').textContent=D;$('lmed').textContent=usd(last.med);$('lbad').textContent=usd(last.bad);$('lgood').textContent=usd(last.good);$('lp10').textContent=usd(last.p10);$('lp90').textContent=usd(last.p90);$('lruin').textContent=pct1(r.ruin);$('lruin').style.color=r.ruin>0.25?'var(--red)':'';$('ldbl').textContent=pct1(r.dbl);
  const tb=$('ltab');tb.innerHTML='';for(const d of [Math.ceil(D*.25),Math.ceil(D*.5),Math.ceil(D*.75),D]){const x=r.rows[d];const tr=document.createElement('tr');tr.innerHTML=`<td>${d}</td><td>${usd(x.p10)}</td><td>${usd(x.bad)}</td><td>${usd(x.med)}</td><td>${usd(x.good)}</td><td>${usd(x.p90)}</td>`;tb.appendChild(tr);}
  const svg=$('lchart'),W=400,H=180,L=50,B=22;svg.innerHTML='';const lo=Math.min(P.lstart/2,...r.rows.map(x=>x.bad)),hi=Math.max(P.lstart,...r.rows.map(x=>x.good));const X=d=>L+(d/D)*(W-L-6),Y=v=>8+(1-(v-lo)/(hi-lo||1))*(H-B-8);
@@ -592,7 +591,7 @@ function runLive(){const T=lastT||trader();const P={lstart:+$('lstart').value||1
  let d='';for(let i=0;i<=D;i++)d+=(i?'L':'M')+X(i).toFixed(1)+' '+Y(r.rows[i].med).toFixed(1);svg.appendChild(el('path',{d,fill:'none',stroke:'#f5c842','stroke-width':'2.2'}));
  svg.appendChild(el('line',{x1:L,x2:W-6,y1:Y(P.lstart/2),y2:Y(P.lstart/2),stroke:'#ff6b5e','stroke-dasharray':'4 4'}));svg.appendChild(el('line',{x1:L,x2:W-6,y1:Y(P.lstart),y2:Y(P.lstart),stroke:'rgba(255,255,255,.25)','stroke-dasharray':'2 4'}));
  for(const dd of [0,Math.round(D/2),D]){const t=el('text',{x:X(dd),y:H-6,'text-anchor':dd===0?'start':(dd===D?'end':'middle'),fill:'#7c7973','font-size':'10'});t.textContent='day '+dd;svg.appendChild(t);}}
-['lstart','lmode','lpct','lfix','ldays'].forEach(k=>$(k).addEventListener('input',runLive));
+['lstart','lpct','lcap','ldays'].forEach(k=>$(k).addEventListener('input',runLive));
 /* ───────────── sources table ───────────── */
 function renderSources(){const tb=$('srcBody');tb.innerHTML='';const q=($('srcQ').value||'').toLowerCase();for(const r of FIRMS){if(q&&!(r.firm+' '+r.plan).toLowerCase().includes(q))continue;const tr=document.createElement('tr');tr.innerHTML=`<td>${r.firm} · ${r.plan} · $${r.size/1000}K ${tagOf(r.confidence)}</td><td>${usd(r.target)} target · ${usd(r.dd)} ${ddName(r.ddType)}${r.ddType!=='static'?(r.lock===null?', no lock':', lock +$'+r.lock):''}${r.dll?' · DLL '+usd(r.dll):''}${r.consEval?' · '+r.consEval+'% cons':''}${r.minDays?' · '+r.minDays+' days':''}${r.timeLimitDays?' · '+r.timeLimitDays+'-day limit':''} · ${usd(r.fee)}${r.feeType==='monthly'?'/mo':''}${r.feeEff<r.fee?' ('+usd(r.feeEff)+' with code)':''}</td><td>${r.share}% split${r.firstTier?' (100% first '+usd(r.firstTier)+')':''}${r.payoutCap?' · cap '+usd(r.payoutCap):''}${r.wf&&r.wf<100?' · withdraw '+r.wf+'% of profit':''}${r.winDays?' · '+r.winDays+' win days $'+r.winDayMin+'+':''}${r.buffer?' · '+usd(r.buffer)+' stays':''}${r.consFunded?' · '+r.consFunded+'% cons':''}${r.maxPayouts?' · max '+r.maxPayouts+' payouts':''}</td><td>${r.verified}</td><td><a href="${r.source}" target="_blank" rel="noopener" style="color:var(--y2)">link</a></td>`;tb.appendChild(tr);}}
 /* ───────────── tabs, share, run ───────────── */
@@ -600,7 +599,7 @@ function showTab(t){document.querySelectorAll('section.tab').forEach(s=>s.classL
 document.querySelectorAll('nav.tabs a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();showTab(a.dataset.tab);}));
 $('segPrice').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{$('segPrice').querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');priceMode=b.dataset.v;loadRules();runAll();}));
 $('segModel').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{$('segModel').querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');$('segModel').dataset.v=b.dataset.v;$('ownBox').style.display=b.dataset.v==='own'?'':'none';$('listBox').style.display=b.dataset.v==='list'?'':'none';runAll();}));
-const STATE_IDS=['wr','rr','risk','costs','tpd','empty','days','lossMfe','firm','plan','size','fstyle','fpmin','fcap1','fgoal','fwf','fshare','ftier','fwd','fmin','fbuf','fconsIn','fddIn','fddType','fbufOnce','ffreq','fcap2','fmaxp','flock','fdays','cn','cf','cmode','cneed','cby','cbudget','lstart','lmode','lpct','lfix','ldays'];
+const STATE_IDS=['wr','rr','risk','costs','tpd','empty','days','lossMfe','firm','plan','size','fstyle','fpmin','fcap1','fgoal','fwf','fshare','ftier','fwd','fmin','fbuf','fconsIn','fddIn','fddType','fbufOnce','ffreq','fcap2','fmaxp','flock','fdays','cn','cf','cmode','cneed','cby','cbudget','lstart','lpct','lcap','ldays'];
 let stateHash='';
 function saveState(){const o={m:$('segModel').dataset.v||'own',l:$('rlist').value};STATE_IDS.forEach(id=>o[id]=$(id).value);stateHash=btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/=+$/,'');return stateHash;}
 function loadState(){const m=location.hash.match(/s=([A-Za-z0-9+/]+)/);if(!m)return false;try{const o=JSON.parse(decodeURIComponent(escape(atob(m[1]))));if(o.firm){firmSel.value=o.firm;fillPlans();planSel.value=o.plan;fillSizes();sizeSel.value=o.size;pick();}STATE_IDS.forEach(id=>{if(o[id]!==undefined&&!['firm','plan','size'].includes(id))$(id).value=o[id];});if(o.m==='list'){$('segModel').querySelector('[data-v="list"]').click();$('rlist').value=o.l||'';}return true;}catch(e){return false;}}
