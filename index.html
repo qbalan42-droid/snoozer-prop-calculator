@@ -91,7 +91,6 @@ details summary{cursor:pointer;color:var(--ink2);font-size:13.5px;font-weight:60
   <a href="#multi" data-tab="multi">How many accounts</a>
   <a href="#compare" data-tab="compare">Best firm for you</a>
   <a href="#live" data-tab="live">Live account</a>
-  <a href="#sources" data-tab="sources">Rules & sources</a>
 </nav>
 
 <!-- ───────── 2 EVAL ───────── -->
@@ -309,15 +308,7 @@ details summary{cursor:pointer;color:var(--ink2);font-size:13.5px;font-weight:60
 </div>
 </section>
 
-<section class="tab" id="tab-sources">
-<div class="panel" id="srcPanel">
-  <h2>Ranked: every <span id="srcSize">$50K</span> account, best to worst</h2>
-  <p style="color:var(--ink2);font-size:14px;margin:0 0 6px">Same size as the one picked on Pass the eval, ranked by expected value per dollar of fee with your current strategy. Rules and sources beside each one.</p>
-  <div class="filters"><input type="text" id="srcQ" placeholder="Search firm or plan" style="min-width:240px"><span class="cap" id="srcNote"></span></div>
-  <p style="color:var(--ink2);font-size:14px;margin:0 0 6px"><span class="tag t-off">OFFICIAL</span> read from the firm's own page · <span class="tag t-m">MIXED</span> rules official, prices third party · <span class="tag t-3p">3RD PARTY</span> review sites that agree · <span class="tag t-c">CONFLICT</span> sources disagree, the first value is used. <span id="catMeta"></span> Prices are list prices; most firms run discount codes most of the time. Rules change weekly. Confirm at checkout.</p>
-  <div class="tw"><table class="wrapcells"><thead><tr><th>#</th><th>Account</th><th>Your odds</th><th>Eval rules</th><th>Funded rules</th><th>Source</th></tr></thead><tbody id="srcBody"></tbody></table></div>
-</div>
-</section>
+
 
 <p class="fine"><b>How this works.</b> Each attempt simulates your trades one at a time. A trade wins with your win rate and pays your ratio times your risk, minus costs, or is drawn from the trade list you pasted. Trailing drawdown is run the way the firm runs it: end-of-day trailing moves the floor only at the close from closed-trade balance and locks at the lock level; intraday trailing follows the highest unrealized point of every trade, so a loser that ran in your favor first still raises the floor; static never moves. Daily limits stop you for the day (soft) or fail you (hard). The attempt passes when it is at the target with the minimum days met and the best single day inside the consistency rule. Funded accounts pay out when the winning days are met, the withdrawable share of profit above the buffer covers the payout, funded consistency passes, and one full stop of room stays above the floor. Costs: monthly fees are charged per month of days used, one-time fees once, resets on every failed attempt where the firm sells them, activation once you pass. <b>Not modeled:</b> news restrictions, inactivity rules, scaling plans beyond contract caps, taxes, tilt. A simulation, not a promise. Not financial advice.</p>
 </div>
@@ -589,7 +580,7 @@ function renderCompare(){const tb=$('cmpBody');tb.innerHTML='';const rows=[...cm
  rows.forEach((x,i)=>{const tr=document.createElement('tr');if(i===0&&cmpSort.k==='evPer')tr.className='best';tr.style.cursor='pointer';tr.innerHTML=`<td>${x.name}</td><td>${usd(x.fee)}${x.r.feeType==='monthly'?'/mo':''}${x.r.feeEff<x.r.fee&&priceMode==='eff'?' <span class="cap" style="display:inline">code</span>':''}</td><td>${pct1(x.q)}</td><td>${x.days}</td><td>${usd(x.costF)}</td><td>${pct1(x.paid)}</td><td>${usd(x.cash)}</td><td style="color:${x.ev>=0?'var(--mint)':'var(--red)'}">${usd(x.ev)}</td><td style="color:${x.evPer>=0?'var(--mint)':'var(--red)'}">${x.evPer.toFixed(2)}</td><td>${usd(x.c90)}</td><td>${tagOf(x.src)}</td>`;
   tr.addEventListener('click',()=>{firmSel.value=x.r.firm;fillPlans();planSel.value=x.r.plan;fillSizes();sizeSel.value=x.r.size;pick();runAll();showTab('eval');});tb.appendChild(tr);});}
 document.querySelectorAll('#cmpTable th').forEach(th=>th.addEventListener('click',()=>{const k=th.dataset.k;if(cmpSort.k===k)cmpSort.dir*=-1;else cmpSort={k,dir:(k==='fee'||k==='costF'||k==='days'||k==='name')?1:-1};renderCompare();}));
-$('cmpRun').addEventListener('click',runCompare);$('srcQ').addEventListener('input',renderSources);['cmpSize','cmpFirm','cmpMaxFee'].forEach(k=>$(k).addEventListener('change',runCompare));
+$('cmpRun').addEventListener('click',runCompare);['cmpSize','cmpFirm','cmpMaxFee'].forEach(k=>$(k).addEventListener('change',runCompare));
 [...new Set(FIRMS.map(f=>f.size))].sort((a,b)=>a-b).forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent='$'+s/1000+'K';$('cmpSize').appendChild(o);});
 firms.forEach(f=>{const o=document.createElement('option');o.value=f;o.textContent=f;$('cmpFirm').appendChild(o);});
 /* ───────────── live tab ───────────── */
@@ -614,7 +605,7 @@ function renderSources(){const tb=$('srcBody');tb.innerHTML='';const q=($('srcQ'
   tr.addEventListener('click',()=>{firmSel.value=r.firm;fillPlans();planSel.value=r.plan;fillSizes();sizeSel.value=r.size;pick();runAll();showTab('eval');});tb.appendChild(tr);});
  $('srcNote').textContent=rows.length+' plans at this size, ranked for '+(STRATS[strat]?STRATS[strat].name:'your custom strategy')+'. Click a row to load it.';}
 /* ───────────── tabs, share, run ───────────── */
-function showTab(t){document.querySelectorAll('section.tab').forEach(s=>s.classList.toggle('on',s.id==='tab-'+t));document.querySelectorAll('nav.tabs a').forEach(a=>a.classList.toggle('on',a.dataset.tab===t));if(t==='compare'&&!cmpRows.length)runCompare();if(t==='sources')renderSources();if(history.replaceState)history.replaceState(null,'',location.pathname+location.search+'#'+t);}
+function showTab(t){document.querySelectorAll('section.tab').forEach(s=>s.classList.toggle('on',s.id==='tab-'+t));document.querySelectorAll('nav.tabs a').forEach(a=>a.classList.toggle('on',a.dataset.tab===t));if(t==='compare'&&!cmpRows.length)runCompare();if(history.replaceState)history.replaceState(null,'',location.pathname+location.search+'#'+t);}
 document.querySelectorAll('nav.tabs a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();showTab(a.dataset.tab);}));
 $('segPrice').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{$('segPrice').querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');priceMode=b.dataset.v;loadRules();runAll();}));
 const STRATS={signals:{name:'Snoozer Signals',wr:77,rr:1,risk:500,costs:15,tpd:0.8,note:'77% win rate · 1:1 · $500 per trade · $15 costs · 0.8 trades a day'},bot:{name:'Snoozer Bot',wr:72,rr:1,risk:250,costs:15,tpd:3,note:'72% win rate · 1:1 · $250 per trade · $15 costs · 3 trades a day'}};
@@ -638,8 +629,8 @@ $('runAll').addEventListener('click',runAll);
 $('copyTxt').addEventListener('click',()=>{const T=lastT||trader();const R=readRules();const e=lastE,f=lastF;if(!e||!f){toast('Run it first');return;}const C=costModel(R,e);const ev=e.q*f.paid*f.firstCash-C.first;
  const txt=['**Snoozer Prop Calculator**','Trader: '+(STRATS[strat]?STRATS[strat].name+' · ':'')+(T.model==='list'?T.list.length+' real trades':'WR '+pct(T.wr)+', '+T.rr.toFixed(2)+' ratio')+' · risk '+usd(T.risk)+' · '+T.tpd+'/day · costs '+usd(T.costs),'Account: '+cur.firm+' '+cur.plan+' $'+cur.size/1000+'K ('+usd(R.fee)+(R.feeType==='monthly'?'/mo':'')+')','Pass one attempt: **'+pct1(e.q)+'** · typical '+(e.pdays||'>'+T.days)+' days · expected cost to funded '+usd(C.toFunded),'Paid before blown: **'+pct1(f.paid)+'** · first payout '+usd(f.firstCash)+' in hand · pass AND paid '+pct1(e.q*f.paid),'EV per attempt: **'+usd(ev)+'** · 90-day funded cash typical '+usd(f.cash.med),'',(location.origin.startsWith('http')?location.origin+location.pathname:'')+'#eval&s='+saveState()].join('\n');
  navigator.clipboard.writeText(txt).then(()=>toast('Results copied'));});
-(function(){const d=FIRMS.find(f=>f.firm==='Topstep'&&/Standard Path/.test(f.plan)&&/XFA Standard/.test(f.plan)&&f.size===50000)||FIRMS.find(f=>f.firm==='Topstep'&&f.size===50000)||FIRMS.find(f=>f.size===50000)||FIRMS[0];firmSel.value=d.firm;fillPlans();planSel.value=d.plan;fillSizes();sizeSel.value=d.size;})();pick();renderSources();$('catMeta').textContent=FIRMS.length+' plans across '+firms.length+' firms, catalog built '+(window.CATALOG_GENERATED||'')+'.';
-const had=loadState();applyStrat();const t0=(location.hash.match(/^#([a-z]+)/)||[])[1];showTab(['eval','funded','multi','compare','live','sources'].includes(t0)?t0:'eval');
+(function(){const d=FIRMS.find(f=>f.firm==='Topstep'&&/Standard Path/.test(f.plan)&&/XFA Standard/.test(f.plan)&&f.size===50000)||FIRMS.find(f=>f.firm==='Topstep'&&f.size===50000)||FIRMS.find(f=>f.size===50000)||FIRMS[0];firmSel.value=d.firm;fillPlans();planSel.value=d.plan;fillSizes();sizeSel.value=d.size;})();pick();$('catMeta')&&($('catMeta').textContent=FIRMS.length+' plans across '+firms.length+' firms, catalog built '+(window.CATALOG_GENERATED||'')+'.');
+const had=loadState();applyStrat();const t0=(location.hash.match(/^#([a-z]+)/)||[])[1];showTab(['eval','funded','multi','compare','live'].includes(t0)?t0:'eval');
 runAll();
 })();
 </script>
