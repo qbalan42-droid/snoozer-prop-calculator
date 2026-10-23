@@ -52,6 +52,9 @@ input:disabled,select:disabled{opacity:.5}
 .tw{overflow-x:auto;margin-top:10px}
 table{width:100%;border-collapse:collapse;font-size:13.5px}
 th,td{text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
+table.wrapcells td{white-space:normal;font-size:12.5px;line-height:1.4;vertical-align:top;min-width:120px}
+table.wrapcells td:nth-child(2){min-width:160px;font-weight:600}
+table.wrapcells{min-width:900px}
 th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);cursor:pointer;user-select:none}
 tr.me td{color:var(--y2);font-weight:700}
 tr.best td{color:var(--mint)}
@@ -308,10 +311,11 @@ details summary{cursor:pointer;color:var(--ink2);font-size:13.5px;font-weight:60
 
 <section class="tab" id="tab-sources">
 <div class="panel" id="srcPanel">
-  <h2>Where the rules came from</h2>
-  <div class="filters"><input type="text" id="srcQ" placeholder="Search firm or plan" style="min-width:240px"></div>
+  <h2>Ranked: every <span id="srcSize">$50K</span> account, best to worst</h2>
+  <p style="color:var(--ink2);font-size:14px;margin:0 0 6px">Same size as the one picked on Pass the eval, ranked by expected value per dollar of fee with your current strategy. Rules and sources beside each one.</p>
+  <div class="filters"><input type="text" id="srcQ" placeholder="Search firm or plan" style="min-width:240px"><span class="cap" id="srcNote"></span></div>
   <p style="color:var(--ink2);font-size:14px;margin:0 0 6px"><span class="tag t-off">OFFICIAL</span> read from the firm's own page · <span class="tag t-m">MIXED</span> rules official, prices third party · <span class="tag t-3p">3RD PARTY</span> review sites that agree · <span class="tag t-c">CONFLICT</span> sources disagree, the first value is used. <span id="catMeta"></span> Prices are list prices; most firms run discount codes most of the time. Rules change weekly. Confirm at checkout.</p>
-  <div class="tw"><table><thead><tr><th>Firm · plan · size</th><th>Eval</th><th>Funded</th><th>Verified</th><th>Source</th></tr></thead><tbody id="srcBody"></tbody></table></div>
+  <div class="tw"><table class="wrapcells"><thead><tr><th>#</th><th>Account</th><th>Your odds</th><th>Eval rules</th><th>Funded rules</th><th>Source</th></tr></thead><tbody id="srcBody"></tbody></table></div>
 </div>
 </section>
 
@@ -600,9 +604,17 @@ function runLive(){const T=lastT||trader();const P={lstart:+$('lstart').value||1
  for(const dd of [0,Math.round(D/2),D]){const t=el('text',{x:X(dd),y:H-6,'text-anchor':dd===0?'start':(dd===D?'end':'middle'),fill:'#7c7973','font-size':'10'});t.textContent='day '+dd;svg.appendChild(t);}}
 ['lstart','lpct','lcap','ldays'].forEach(k=>$(k).addEventListener('input',runLive));
 /* ───────────── sources table ───────────── */
-function renderSources(){const tb=$('srcBody');tb.innerHTML='';const q=($('srcQ').value||'').toLowerCase();for(const r of FIRMS){if(q&&!(r.firm+' '+r.plan).toLowerCase().includes(q))continue;const tr=document.createElement('tr');tr.innerHTML=`<td>${r.firm} · ${r.plan} · $${r.size/1000}K ${tagOf(r.confidence)}</td><td>${usd(r.target)} target · ${usd(r.dd)} ${ddName(r.ddType)}${r.ddType!=='static'?(r.lock===null?', no lock':', lock +$'+r.lock):''}${r.dll?' · DLL '+usd(r.dll):''}${r.consEval?' · '+r.consEval+'% cons':''}${r.minDays?' · '+r.minDays+' days':''}${r.timeLimitDays?' · '+r.timeLimitDays+'-day limit':''} · ${usd(r.fee)}${r.feeType==='monthly'?'/mo':''}${r.feeEff<r.fee?' ('+usd(r.feeEff)+' with code)':''}</td><td>${r.share}% split${r.firstTier?' (100% first '+usd(r.firstTier)+')':''}${r.payoutCap?' · cap '+usd(r.payoutCap):''}${r.wf&&r.wf<100?' · withdraw '+r.wf+'% of profit':''}${r.winDays?' · '+r.winDays+' win days $'+r.winDayMin+'+':''}${r.buffer?' · '+usd(r.buffer)+' stays':''}${r.consFunded?' · '+r.consFunded+'% cons':''}${r.maxPayouts?' · max '+r.maxPayouts+' payouts':''}</td><td>${r.verified}</td><td><a href="${r.source}" target="_blank" rel="noopener" style="color:var(--y2)">link</a></td>`;tb.appendChild(tr);}}
+function renderSources(){const tb=$('srcBody');tb.innerHTML='';const q=($('srcQ').value||'').toLowerCase();const size=cur?cur.size:50000;$('srcSize').textContent='$'+size/1000+'K';
+ const T=lastT||trader();const rows=[];
+ for(const r0 of FIRMS){if(r0.size!==size)continue;if(q&&!(r0.firm+' '+r0.plan).toLowerCase().includes(q))continue;const r={...r0,fee:feeOf(r0)};
+  reseed(2024);const e=simEval(T,r,600);const F=fundedFrom(r);reseed(2025);const f=simFunded(T,r,F,400,Math.max(F.fdays,90));const c=costModel(r,e);const ev=e.q*f.paid*f.firstCash-c.first;rows.push({r,e,f,c,ev,evPer:ev/Math.max(1,c.first)});}
+ rows.sort((a,b)=>b.evPer-a.evPer);
+ rows.forEach((x,i)=>{const r=x.r;const tr=document.createElement('tr');if(i===0)tr.className='best';tr.style.cursor='pointer';
+  tr.innerHTML=`<td>${i+1}</td><td>${r.firm}<br><span style="font-weight:400;color:var(--ink2)">${r.plan}</span><br>${tagOf(r.confidence)}</td><td>pass <b>${pct1(x.e.q)}</b><br>paid before blown <b>${pct1(x.f.paid)}</b><br>first cash <b>${usd(x.f.firstCash)}</b><br>EV / attempt <b style="color:${x.ev>=0?'var(--mint)':'var(--red)'}">${usd(x.ev)}</b><br>cost to funded ${usd(x.c.toFunded)}</td><td>${r.instant?'<b>No eval, funded on purchase</b>':usd(r.target)+' target'} · ${usd(r.dd)} ${ddName(r.ddType)}${r.ddType!=='static'?(r.lock===null?', no lock':', lock +$'+r.lock):''}${r.dll?' · daily limit '+usd(r.dll)+' ('+r.dllType+')':''}${r.consEval?' · '+r.consEval+'% consistency':''}${r.minDays?' · '+r.minDays+' min days':''}${r.timeLimitDays?' · '+r.timeLimitDays+'-day limit':''}<br>fee <b>${usd(r.fee)}${r.feeType==='monthly'?'/mo':''}</b>${r.feeEff<r.fee&&priceMode==='eff'?' (list '+usd(r.fee)+')':''}${r.resetFee?' · reset '+usd(r.resetFee):''}${r.activationFee?' · activation '+usd(r.activationFee):''}</td><td>${r.share}% split${r.firstTier?' (100% of first '+usd(r.firstTier)+')':''}${r.payoutCap?' · cap '+usd(r.payoutCap)+(r.payoutCapLater?' then '+usd(r.payoutCapLater):''):' · no cap'}${r.wf&&r.wf<100?' · withdraw '+r.wf+'% of profit':''}${r.winDays?' · '+r.winDays+' winning days'+(r.winDayMin?' of $'+r.winDayMin+'+':''):''}${r.buffer?' · '+usd(r.buffer)+' stays'+(r.bufferOnce?' until first payout':''):''}${r.consFunded?' · '+r.consFunded+'% consistency':''}${r.maxPayouts?' · max '+r.maxPayouts+' payouts':''}${r.payoutFreq>1?' · every '+r.payoutFreq+' days':''}${r.payoutMin?' · min '+usd(r.payoutMin):''}</td><td><a href="${r.source}" target="_blank" rel="noopener" style="color:var(--y2)">source</a><br><span class="cap">${r.verified}</span>${(r.assumed||[]).length?'<br><span class="cap">assumed: '+r.assumed.join('; ')+'</span>':''}</td>`;
+  tr.addEventListener('click',()=>{firmSel.value=r.firm;fillPlans();planSel.value=r.plan;fillSizes();sizeSel.value=r.size;pick();runAll();showTab('eval');});tb.appendChild(tr);});
+ $('srcNote').textContent=rows.length+' plans at this size, ranked for '+(STRATS[strat]?STRATS[strat].name:'your custom strategy')+'. Click a row to load it.';}
 /* ───────────── tabs, share, run ───────────── */
-function showTab(t){document.querySelectorAll('section.tab').forEach(s=>s.classList.toggle('on',s.id==='tab-'+t));document.querySelectorAll('nav.tabs a').forEach(a=>a.classList.toggle('on',a.dataset.tab===t));if(t==='compare'&&!cmpRows.length)runCompare();if(history.replaceState)history.replaceState(null,'',location.pathname+location.search+'#'+t);}
+function showTab(t){document.querySelectorAll('section.tab').forEach(s=>s.classList.toggle('on',s.id==='tab-'+t));document.querySelectorAll('nav.tabs a').forEach(a=>a.classList.toggle('on',a.dataset.tab===t));if(t==='compare'&&!cmpRows.length)runCompare();if(t==='sources')renderSources();if(history.replaceState)history.replaceState(null,'',location.pathname+location.search+'#'+t);}
 document.querySelectorAll('nav.tabs a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();showTab(a.dataset.tab);}));
 $('segPrice').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{$('segPrice').querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');priceMode=b.dataset.v;loadRules();runAll();}));
 const STRATS={signals:{name:'Snoozer Signals',wr:77,rr:1,risk:500,costs:15,tpd:0.8,note:'77% win rate · 1:1 · $500 per trade · $15 costs · 0.8 trades a day'},bot:{name:'Snoozer Bot',wr:72,rr:1,risk:250,costs:15,tpd:3,note:'72% win rate · 1:1 · $250 per trade · $15 costs · 3 trades a day'}};
