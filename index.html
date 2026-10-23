@@ -131,8 +131,7 @@ details summary{cursor:pointer;color:var(--ink2);font-size:13.5px;font-weight:60
     <div class="row"><label for="risk">Risk per trade ($)<small>What a full stop costs you</small></label><input type="number" id="risk" value="300" step="25" min="1"></div>
     <div class="row"><label for="costs">Costs per trade ($)<small>Commissions + slippage, round trip</small></label><input type="number" id="costs" value="10" step="1" min="0"></div>
     <div class="row"><label for="tpd">Trades per day</label><input type="number" id="tpd" value="2" step="0.5" min="0.1"></div>
-    <div class="row"><label for="empty">Days you don't trade (%)<small>No setup, no signal, life</small></label><input type="number" id="empty" value="20" step="5" min="0" max="90"></div>
-    <div class="row"><label for="days">Trading days you'll give one attempt<small>Your patience, not the firm's clock</small></label><input type="number" id="days" value="30" step="5" min="1"></div>
+    <input type="hidden" id="empty" value="0"><input type="hidden" id="days" value="60">
     <div class="rules" id="youInfo"></div>
     <div class="btn-row"><button class="btn" id="runAll" type="button">Run it</button><button class="btn btn-s" id="share" type="button">Copy share link</button><button class="btn btn-s" id="copyTxt" type="button">Copy results for Discord</button></div>
     <details><summary>Intraday trailing detail</summary>
@@ -151,7 +150,7 @@ details summary{cursor:pointer;color:var(--ink2);font-size:13.5px;font-weight:60
         <div><b id="pdays">…</b><span>trading days to pass (typical)</span></div>
         <div><b id="dip">…</b><span>typical worst dip during the eval</span></div>
         <div><b id="fdd">…</b><span>failures: drawdown</span></div>
-        <div><b id="ftime">…</b><span>failures: ran out of days</span></div>
+        <div><b id="ftime">…</b><span>failures: still not passed after 60 days</span></div>
         <div><b id="fcons">…</b><span>runs held back by consistency</span></div>
       </div>
       <div class="verdict" id="verdict">Run it.</div>
@@ -495,7 +494,7 @@ function runYou(){const T=trader();
  if(T.model==='list'&&T.list.length<5)warn='Paste at least 5 trades, or switch to win rate and ratio.';
  else if(T.n>0&&lo<be)warn=`Your win rate could be as low as ${pct(lo)} on ${T.n} trades, under the ${pct(be)} breakeven at a ${T.rr.toFixed(2)} ratio. The edge is not proven yet.`;
  else if(perTrade<=0)warn='After costs this loses money per trade. No firm fixes that.';
- $('youInfo').innerHTML=`<b>Edge:</b> ${(edge>=0?'+':'')+edge.toFixed(2)}R per trade, <b style="color:${perTrade>=0?'var(--mint)':'var(--red)'}">${usd(perTrade)}</b> after costs · breakeven win rate ${pct(be)} · Kelly ${kelly>0?pct(kelly)+' (use a quarter)':'none'} · ${T.model==='list'?T.list.length+' pasted trades replayed':'win rate '+pct(T.wr)+', wins '+T.rr.toFixed(2)+'× losses'} · ${T.tpd} trades a day, ${Math.round(T.empty*100)}% empty days${warn?'<div class="cap" style="color:#ffd3cf">'+warn+'</div>':''}`;
+ $('youInfo').innerHTML=`<b>Edge:</b> ${(edge>=0?'+':'')+edge.toFixed(2)}R per trade, <b style="color:${perTrade>=0?'var(--mint)':'var(--red)'}">${usd(perTrade)}</b> after costs · breakeven win rate ${pct(be)} · Kelly ${kelly>0?pct(kelly)+' (use a quarter)':'none'} · ${T.model==='list'?T.list.length+' pasted trades replayed':'win rate '+pct(T.wr)+', wins '+T.rr.toFixed(2)+'× losses'} · ${T.tpd} trades a day${warn?'<div class="cap" style="color:#ffd3cf">'+warn+'</div>':''}`;
  if(T.model==='list'){const w=T.list.filter(x=>x>0),l=T.list.filter(x=>x<0),z=T.list.filter(x=>x===0);$('listInfo').innerHTML=T.list.length?`<b>${T.list.length} trades</b> · ${w.length} wins (${pct(T.wr)}), ${l.length} losses, ${z.length} breakeven · avg win +${T.avgW.toFixed(2)}R · avg loss −${T.avgL.toFixed(2)}R · <b>${(T.meanR>=0?'+':'')+T.meanR.toFixed(2)}R per trade</b>`:'Paste trades to see their stats.';}
  return T;}
 /* ───────────── eval tab ───────────── */
